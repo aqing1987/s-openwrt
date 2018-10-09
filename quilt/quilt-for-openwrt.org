@@ -1,0 +1,235 @@
+#+title: quilt for openwrt
+#+options: ^:nil
+
+* Reference
++ http://savannah.nongnu.org/projects/quilt
++ https://wiki.openwrt.org/doc/devel/patches
+
+* Description
+Quilt allows you to easily manage large numbers of patches by keeping
+track of the changes each patch makes. Patches can be applied,
+un-applied, refreshed, and more.
+
+* Install quilt
+#+BEGIN_SRC sh
+audo apt-get install quilt
+#+END_SRC
+
+* Adding a package patch
+** prepare the source directory with `QUILT=1'
+#+BEGIN_SRC sh
+make package/example/{clean,prepare} V=s QUILT=1
+#+END_SRC
+
+For host-side packages, use:
+#+BEGIN_SRC sh
+make package/example/host/{clean,prepare} V=s QUILT=1
+#+END_SRC
+
+** enter the package source directory
+#+BEGIN_SRC sh
+cd build_dir/target-*/example-*
+#+END_SRC
+
+** check all patches (not mandatory)
+#+BEGIN_SRC sh
+quilt series
+#+END_SRC
+
+** apply all patches
+#+BEGIN_SRC sh
+quilt push -a
+#+END_SRC
+
+** create a new, empty patch file
+#+BEGIN_SRC sh
+quilt new 000-abc.patch
+#+END_SRC
+
++ The name should start with a number, followed by a hyphen and a very short
+  description of what is changed
++ The chosen number should be higher than any existing patch - use quilt
+  series to see the list of patches
+
+
+** associate files with the new patch
+#+BEGIN_SRC logic
+while (not finished) {
+    quilt add file
+}
+#+END_SRC
+
+Repeat that for any file that needs to be modified.
+
+** check files associated with the new patch
+#+BEGIN_SRC sh
+quilt files
+#+END_SRC
+
+** do modification
+Do modification to the added files of the patch
+
+** review the modification
+#+BEGIN_SRC sh
+quilt diff
+#+END_SRC
+
+** update the patch file with the changes made
+#+BEGIN_SRC sh
+quilt refresh
+#+END_SRC
+
+** change back to the toplevel directory
+#+BEGIN_SRC sh
+cd ../../../
+#+END_SRC
+
+** move the new patch file over to the buildroot
+#+BEGIN_SRC sh
+make package/example/update V=s
+#+END_SRC
+
+The generated patch located in:
+#+BEGIN_SRC sh
+build_dir/target-*/example-*/patches/000-abc.patch
+#+END_SRC
+
+** Finally rebuild the package to test the changes
+#+BEGIN_SRC sh
+make package/example/{clean,compile} package/index V=s
+#+END_SRC
+
+* Adding a kernel patch
+The process for modifying kernel patches is the same as for packages,
+only the make targets and directories differ.
+
+** prepare the kernel tree
+#+BEGIN_SRC sh
+make target/linux/{clean,prepare} V=s QUILT=1
+#+END_SRC
+
+** enter the kernel source directory
+#+BEGIN_SRC sh
+cd build_dir/target-*/linux-*/linux-3.*
+#+END_SRC
+
+** check all patches (not mandatory)
+#+BEGIN_SRC sh
+quilt series
+#+END_SRC
+
+** apply all patches
+#+BEGIN_SRC sh
+quilt push -a
+#+END_SRC
+
+** create a new, empty patch file
+#+BEGIN_SRC sh
+quilt new platform/000-abc.patch
+#+END_SRC
+
+Note: for the kernel, an additional subdirectory for patches is used,
+*generic/* contains patches common to all architectures, and *platform/*
+contains patches specific to the current target.
+
+Patches should be named with the correct prefix, platform/000-abc.patch
+or generic/000-abc.patch. If not, the update may not work correctly.
+
+** do modification
+Do modification to the added files of the patch
+
+** review the modification
+#+BEGIN_SRC sh
+quilt diff
+#+END_SRC
+
+** update the patch file with the changes made
+#+BEGIN_SRC sh
+quilt refresh
+#+END_SRC
+
+** change back to the toplevel directory
+#+BEGIN_SRC sh
+cd ../../../../
+#+END_SRC
+
+** move the new patch file over to the buildroot
+#+BEGIN_SRC sh
+make target/linux/update V=s
+#+END_SRC
+
+The generated patch located in:
+#+BEGIN_SRC sh
+build_dir/target-*/linux-*/linux-3.*/patches/generic
+#+END_SRC
+or:
+#+BEGIN_SRC sh
+build_dir/target-*/linux-*/linux-3.*/patches/platform
+#+END_SRC
+
+** verify whether our patch is applied or not
+#+BEGIN_SRC sh
+make target/linux/{clean,prepare} V=s QUILT=1
+#+END_SRC
+
+* Edit an existing patch
+** prepare the source directory
+#+BEGIN_SRC sh
+make package/example/{clean,prepare} V=s QUILT=1
+#+END_SRC
+
+** change to the prepared source directory
+#+BEGIN_SRC sh
+cd build_dir/target-*/example-*
+#+END_SRC
+
+** list the patches available
+#+BEGIN_SRC sh
+quilt series
+#+END_SRC
+
+** Advance to the patch that needs to be edited
+#+BEGIN_SRC sh
+quilt push 010-main_code_fix.patch
+#+END_SRC
+
++ When passing a valid patch filename to push, quilt will only apply
+  the series until it reaches the specified patch
++ If unsure, use `quilt series' to see existing patches and `quilt top' to
+  see the current position
++ If the current position is beyound the desired patch, use `quilt pop' to
+  remove patches in the reverse order
++ You can use the "force" push option to interactively apply a broken patch
+
+** edit the files included in the patch
+first check which files are included in the patch
+#+BEGIN_SRC sh
+quilt files
+#+END_SRC
+
+then fix issues in the file.
+
+** review the changes
+#+BEGIN_SRC sh
+quilt diff
+#+END_SRC
+
+** update the patch with the changes
+#+BEGIN_SRC sh
+quilt refresh
+#+END_SRC
+
+** go back to the toplevel diretory of the buildroot
+#+BEGIN_SRC sh
+cd ../../../
+#+END_SRC
+
+** move the updated patch file over to the buildroot
+#+BEGIN_SRC sh
+make package/example/update V=s
+#+END_SRC
+
+** Finally rebuild the package to test the changes
+#+BEGIN_SRC sh
+make package/example/{clean,compile} V=s
+#+END_SRC
