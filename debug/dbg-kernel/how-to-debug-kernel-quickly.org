@@ -1,0 +1,28 @@
+#+TITLE: How to Debug Kernel Quickly
+#+OPTIONS: ^:nil
+
+* Background
+
+Before knowing this trick, if we want to debug kernel, we have to
+invoke
+#+BEGIN_SRC sh
+  $ make V=s -j4
+#+END_SRC
+
+Though with the multi-thread support, it is still time consuming.
+
+
+* Trick
+
+We can only build the kernel with the command below:
+#+BEGIN_SRC sh
+  $ make target/linux/{compile,install} V=s
+#+END_SRC
+
+E.g. we build qcom ipq4029, after the build process. There is file
+#+BEGIN_SRC sh
+  $ bin/ipq806x/openwrt-ipq806x-ipq40xx-ubi-root.img
+#+END_SRC
+
+generated. Then we can burn it in uboot for quickly kernel debug
+task.
