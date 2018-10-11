@@ -1,0 +1,171 @@
+#+TITLE: Fix Issue with 'No Nand device found'
+#+OPTIONS: ^:nil
+
+
+* Description
+Use SDK 6.1.0 for my ipq4029 board (not DEMO). After compiled, 
+burn, then the issue comes:
+#+BEGIN_SRC sh
+  [    1.357089] m25p80 spi0.0: found mx25l3205d, expected n25q128a11             
+  [    1.362621] m25p80 spi0.0: mx25l3205d (4096 Kbytes)                          
+  [    1.367562] 12 ofpart partitions found on MTD device spi0.0                  
+  [    1.373048] Creating 12 MTD partitions on "spi0.0":                          
+  [    1.377893] 0x000000000000-0x000000040000 : "0:SBL1"                         
+  [    1.383956] 0x000000040000-0x000000060000 : "0:MIBIB"                        
+  [    1.388973] 0x000000060000-0x0000000c0000 : "0:QSEE"                         
+  [    1.393970] 0x0000000c0000-0x0000000d0000 : "0:CDT"                          
+  [    1.398822] 0x0000000d0000-0x0000000e0000 : "0:DDRPARAMS"                    
+  [    1.404253] 0x0000000e0000-0x0000000f0000 : "0:APPSBLENV"                    
+  [    1.409531] 0x0000000f0000-0x0000001f0000 : "0:APPSBL"                       
+  [    1.414716] 0x0000001f0000-0x000000260000 : "0:BOOTCONFIG"                   
+  [    1.420150] 0x000000260000-0x0000002e0000 : "0:HARDINFO"                     
+  [    1.425512] 0x0000002e0000-0x0000003e0000 : "0:PROINFO"                      
+  [    1.430710] 0x0000003e0000-0x0000003f0000 : "0:MFINFO"                       
+  [    1.435918] 0x0000003f0000-0x000000400000 : "0:ART"                          
+  [    1.452705] libphy: ipq40xx_mdio: probed                                     
+  [    1.457794] ipq40xx-mdio 90000.mdio: ipq40xx-mdio driver was registered      
+  [    1.463449] i2c /dev entries driver                                          
+  [    1.469042] sdhci: Secure Digital Host Controller Interface driver           
+  [    1.474219] sdhci: Copyright(c) Pierre Ossman                                
+  [    1.478526] sdhci-pltfm: SDHCI platform and OF driver helper                 
+  [    1.488848] mt29f spi0.1: Not parse nandid, set default: MACRON.             
+  [    1.493951] mt29f spi0.1: Not parse nandid, set default: MACRON.             
+  [    1.499905] mt29f spi0.1: Not parse nandid, set default: MACRON.             
+  [    1.505824] nand: No NAND device found                                       
+  [    1.512993] TCP: cubic registered                                            
+  [    1.515899] NET: Registered protocol family 10                               
+  [    1.520831] NET: Registered protocol family 17                               
+  [    1.524380] Bridge firewalling registered                                    
+  [    1.528239] 8021q: 802.1Q VLAN Support v1.8                                  
+  [    1.532532] Registering SWP/SWPB emulation handler                           
+  [    1.538430] SD0 VccQ: disabling                                              
+  [    1.540538] regulator-dummy: disabling                                       
+  [    1.544829] UBI error: ubi_init: cannot open mtd rootfs_1, error -2          
+  [    1.550542] UBI error: ubi_init: cannot open mtd config_data, error -2       
+  [    1.557069] drivers/rtc/hctosys.c: unable to open rtc device (rtc0)          
+  [    1.566797] clk: Not disabling unused clocks                                 
+  [    1.570034] ALSA device list:                                                
+  [    1.573046]   No soundcards found.                                           
+  [    1.576762] VFS: Cannot open root device "mtd:ubi_rootfs" or unknown-block(0,
+  0): error -2
+
+#+END_SRC
+
+* Fix
+Modify SPI Chip Select content in
+#+BEGIN_SRC sh
+  arch/arm/boot/dts/qcom-ipq40xx-db.dk02.1-c1.dts
+#+END_SRC
+
+From
+#+BEGIN_SRC sh
+  qcom,gpio-cs1 = <&tlmm 59 0>;
+#+END_SRC
+
+To
+#+BEGIN_SRC sh
+  cs-gpios = <0>, <&tlmm 59 0>;
+#+END_SRC
+
+* Analysis
+** Make sure which device tree used
+Just check the uboot boot info
+#+BEGIN_SRC sh
+  ## Flattened Device Tree from FIT Image at 84000000                             
+     Using 'config@db.dk02.1-c1' configuration                                    
+     Trying 'fdt@db.dk02.1-c1' FDT blob subimage                                  
+       Description:  ARM OpenWrt qcom-ipq40xx-ap.dkxx device tree blob
+#+END_SRC
+
+So the device tree *db.dk02.1-c1* used. It points to the file
+#+BEGIN_SRC sh
+  arch/arm/boot/dts/qcom-ipq40xx-db.dk02.1-c1.dts
+#+END_SRC
+
+in the kernel.
+
+** Compare the whole kernel (good, and bad)
+Use beyondcompare.
+
+Find a suspect modification in
+#+BEGIN_SRC sh
+  arch/arm/boot/dts/qcom-ipq40xx-ap.dk01.1-c2.dts
+#+END_SRC
+
+New kernel content
+#+BEGIN_SRC sh
+  spi_0: spi@78b5000 { /* BLSP1 QUP1 */
+                          status = "ok";
+                          cs-gpios = <0>, <&tlmm 59 0>;
+
+                          mt29f@1 {
+                                  #address-cells = <1>;
+                                  #size-cells = <1>;
+                                  compatible = "spinand,mt29f";
+                                  reg = <1>;
+                                  spi-max-frequency = <24000000>;
+                          };
+
+                  };
+#+END_SRC
+
+OLD Kernel content:
+#+BEGIN_SRC sh
+  spi_0: spi@78b5000 { /* BLSP1 QUP1 */
+                          status = "ok";
+                          qcom,gpio-cs1 = <&tlmm 59 0>;
+
+                          mt29f@1 {
+                                  #address-cells = <1>;
+                                  #size-cells = <1>;
+                                  compatible = "spinand,mt29f";
+                                  reg = <1>;
+                                  spi-max-frequency = <24000000>;
+                          };
+
+                  };
+#+END_SRC
+
+But in the device tree
+#+BEGIN_SRC sh
+  arch/arm/boot/dts/qcom-ipq40xx-db.dk02.1-c1.dts
+#+END_SRC
+
+The SPI chip select content are the same in two kernels:
+#+BEGIN_SRC sh
+  qcom,gpio-cs1 = <&tlmm 59 0>;
+#+END_SRC
+
+The SPI driver should updated in the new SDK.
+
+
+** Check the New SDK modification history
+
+
+#+BEGIN_SRC sh
+  $ git log -p arch/arm/boot/dts/qcom-ipq40xx-ap.dk01.1-c2.dts
+
+      ipq40xx: spi: Enable GPIO based chip select for SPI devices
+      
+      Add GPIO based chip select support to SPI controller to support
+      multiple SPI devices connected.
+      
+      Conflicts:
+          drivers/spi/spi_qsd.c
+      
+  diff --git a/arch/arm/boot/dts/qcom-ipq40xx-ap.dk01.1-c2.dts b/arch/arm/boot/dts/qcom-ipq40xx-ap.dk01.1-c2.dts
+  index b031249..0cd06a8 100644
+  --- a/arch/arm/boot/dts/qcom-ipq40xx-ap.dk01.1-c2.dts
+  +++ b/arch/arm/boot/dts/qcom-ipq40xx-ap.dk01.1-c2.dts
+  @@ -29,7 +29,7 @@
+   
+                  spi_0: spi@78b5000 { /* BLSP1 QUP1 */
+                          status = "ok";
+  -                       qcom,gpio-cs1 = <&tlmm 59 0>;
+  +                       cs-gpios = <0>, <&tlmm 59 0>;
+   
+                          mt29f@1 {
+                                  #address-cells = <1>;
+#+END_SRC
+
+So, yes, we must use *cs-gpios* format for SPI config in the new SDK.
