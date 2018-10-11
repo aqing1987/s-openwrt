@@ -169,3 +169,9 @@ The SPI driver should updated in the new SDK.
 #+END_SRC
 
 So, yes, we must use *cs-gpios* format for SPI config in the new SDK.
+
+* Principle
+Check 
++ https://www.kernel.org/doc/Documentation/devicetree/bindings/spi/spi-bus.txt
+
+
