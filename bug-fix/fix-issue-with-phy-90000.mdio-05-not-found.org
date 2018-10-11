@@ -1,0 +1,208 @@
+#+TITLE: Fix issue with 'libphy: PHY 90000.mdio:05 not found'
+#+OPTIONS: ^:nil
+
+* Description
+For porting SDK6.1.0, after burn the compiled code for my ipq4029
+board, I got following issue
+#+BEGIN_SRC sh
+  [   30.674739] **********************************************************       
+  [   30.680237] * Driver    :NSS GMAC Driver - RTL v(3.72a)                      
+  [   30.685476] * Version   :1.0                                                 
+  [   30.688309] * Copyright :Copyright (c) 2013-2018 The Linux Foundation. All ri
+  ghts reserved.                                                                  
+  [   30.696661] **********************************************************       
+  [   30.719387] l2tp_core: L2TP core driver, V2.0                                
+  [   30.723709] l2tp_netlink: L2TP netlink interface                             
+  [   30.755183] qca-nss-drv.ko is loaded for symbol link                         
+  [   30.760969] sit: IPv6 over IPv4 tunneling driver                             
+  [   30.767334] nat46: module (version 8ff2ae59ec9840a7b8b45f976c51cae80abe0226) 
+  loaded.                                                                         
+  [   30.778307] gre: GRE over IPv4 demultiplexor driver                          
+  [   30.783443] ip_gre: GRE over IPv4 tunneling driver                           
+  [   30.791334] ip6_gre: GRE over IPv6 tunneling driver                          
+  [   30.799869] bonding: Ethernet Channel Bonding Driver: v3.7.1 (April 27, 2011)
+  [   30.814527] QCA multicast snooping installed successfully                    
+  [   30.822476] ip6_tables: (C) 2000-2006 Netfilter Core Team                    
+  [   30.834058] EDMA using MAC@ - using                                          
+  [   30.836353] 6a:ec:5d:70:7b:3a                                                
+  [   30.840924] EDMA using MAC@ - using                                          
+  [   30.843270] e6:92:c1:0d:13:fa                                                
+  [   30.853542] libphy: PHY 90000.mdio:05 not found                              
+  [   30.993174] ------------[ cut here ]------------                             
+  [   30.996790] WARNING: CPU: 0 PID: 484 at mm/vmalloc.c:1443 release_nodes+0x198
+  /0x1c0()                                                                        
+  [   31.004639] Trying to vfree() nonexistent vm area (d1950000)                 
+  [   31.013957] Modules linked in: essedma(+) ip6t_REJECT ip6table_raw ip6table_m
+  angle ip6table_filter ip6_tables x_tables qca_mcs qca_85xx_sw msdos bonding ip6_
+  gre ip_gre gre ifb nat46 sit qca_nss_drv l2tp_netlink l2tp_core ipcomp6 xfrm6_tu
+  nnel xfrm6_mode_tunnel xfrm6_mode_transport xfrm6_mode_beet esp6 ah6 ipcomp xfrm
+  4_tunnel xfrm4_mode_tunnel xfrm4_mode_transport xfrm4_mode_beet esp4 ah4 ip6_tun
+  nel qca_nss_gmac tunnel6 tunnel4 ip_tunnel qca_ssdk ppp_generic slhc af_key xfrm
+  _user xfrm_ipcomp xfrm_algo vfat fat ntfs qrfs nf_conntrack nls_iso8859_1 nls_cp
+  437 shortcut_fe_drv aq_phy shortcut_fe_ipv6 shortcut_fe sha1_generic qcrypto cry
+  ptosoft cryptodev ocf md5 hmac ecb des_generic cbc authenc usb_storage leds_gpio
+   bootconfig xhci_hcd dwc3 udc_core dwc3_qcom dwc3_ipq40xx phy_qcom_ssusb phy_qco
+  m_hsusb phy_qca_uniphy phy_qca_baldur sd_mod ahci_platform gpio_button_hotplug b
+  utton_hotplug input_core usbcore nls_base usb_common                            
+  [   31.094032] CPU: 3 PID: 484 Comm: kmodloader Not tainted 3.14.77 #9          
+  [   31.100311] [<c021e738>] (unwind_backtrace) from [<c021b650>] (show_stack+0x1
+  0/0x14)                                                                         
+  [   31.108026] [<c021b650>] (show_stack) from [<c03e8770>] (dump_stack+0x78/0x98
+  )                                                                               
+  [   31.115215] [<c03e8770>] (dump_stack) from [<c022fe10>] (warn_slowpath_common
+  +0x60/0x84)                                                                     
+  [   31.123285] [<c022fe10>] (warn_slowpath_common) from [<c022fe60>] (warn_slowp
+  ath_fmt+0x2c/0x3c)                                                              
+  [   31.131967] [<c022fe60>] (warn_slowpath_fmt) from [<c047ebe0>] (release_nodes
+  +0x198/0x1c0)                                                                   
+  [   31.140212] [<c047ebe0>] (release_nodes) from [<c047c16c>] (driver_probe_devi
+  ce+0x1a8/0x348)                                                                 
+  [   31.148630] [<c047c16c>] (driver_probe_device) from [<c047c3b8>] (__driver_at
+  tach+0x68/0x8c)                                                                 
+  [   31.157048] [<c047c3b8>] (__driver_attach) from [<c047a828>] (bus_for_each_de
+  v+0x68/0x8c)                                                                    
+  [   31.165227] [<c047a828>] (bus_for_each_dev) from [<c047b774>] (bus_add_driver
+  +0x100/0x1f0)                                                                   
+  [   31.173455] [<c047b774>] (bus_add_driver) from [<c047c9bc>] (driver_register+
+  0x9c/0xe0)                                                                      
+  [   31.181443] [<c047c9bc>] (driver_register) from [<c0213368>] (do_one_initcall
+  +0xc4/0x180)                                                                    
+  [   31.189606] [<c0213368>] (do_one_initcall) from [<c02879f4>] (load_module+0x1
+  608/0x1b60)                                                                     
+  [   31.197676] [<c02879f4>] (load_module) from [<c028803c>] (SyS_init_module+0xf
+  0/0x100)                                                                        
+  [   31.205490] [<c028803c>] (SyS_init_module) from [<c0208c40>] (ret_fast_syscal
+  l+0x0/0x44)                                                                     
+  [   31.213654] ---[ end trace d7de8902835c374f ]---                             
+  [   31.218189] ess_edma: probe of c080000.edma failed with error -5             
+  [   31.309425] nss_lag_init[354]:LAG Manager Installed
+#+END_SRC
+
+* Fix
+In driver
+#+BEGIN_SRC sh
+  drivers/net/phy/mdio-ipq40xx.c
+#+END_SRC
+
+Comment the *ipq40xx_phy_reset* code in ipq40xx_mdio_probe as below.
+#+BEGIN_SRC c
+  static int ipq40xx_mdio_probe(struct platform_device *pdev)
+   {
+          struct ipq40xx_mdio_data *am;
+          struct resource *res;
+          int ret, i;
+
+          /*
+          ret = ipq40xx_phy_reset(pdev);
+          if (ret) {
+                  dev_err(&pdev->dev, "Could not find qca8075 reset gpio\n");
+                  goto err_out;
+          }
+          */
+
+          am = devm_kzalloc(&pdev->dev, sizeof(*am), GFP_KERNEL);
+          if (!am)
+                  return -ENOMEM;
+#+END_SRC
+
+
+* Analysis
+With the key error message below:
+#+BEGIN_SRC sh
+  libphy: PHY 90000.mdio:05 not found
+#+END_SRC
+
+I dig the comipled dtb file
+#+BEGIN_SRC sh
+  bin/ipq806x/dtbs/qcom-ipq40xx-db.dk02.1-c1.dtb
+#+END_SRC
+
+with the command:
+#+BEGIN_SRC sh
+  dtc -I dtb -O dts -o /tmp/ok2.dts bin/ipq806x/dtbs/qcom-ipq40xx-db.dk02.1-c1.dtb
+#+END_SRC
+
+Check the /tmp/ok2.dts I got follwing *mdio* related info:
+#+BEGIN_SRC sh
+  mdio@90000 {
+              #address-cells = <0x1>;
+              #size-cells = <0x1>;
+              compatible = "qcom,ipq40xx-mdio";
+              reg = <0x90000 0x64>;
+              status = "ok";
+              pinctrl-0 = <0x55>;
+              pinctrl-names = "default";
+              phy-reset-gpio = <0x4b 0x2f 0x0>;
+              bias-disable;
+              bias-diable;
+
+              ethernet-phy@0 {
+                  reg = <0x0>;
+              };
+
+              ethernet-phy@1 {
+                  reg = <0x1>;
+              };
+
+              ethernet-phy@2 {
+                  reg = <0x2>;
+              };
+
+              ethernet-phy@3 {
+                  reg = <0x3>;
+              };
+
+              ethernet-phy@4 {
+                  reg = <0x4>;
+              };
+
+              ethernet-phy@5 {
+                  reg = <0x5>;
+              };
+          };
+#+END_SRC
+
+The key is *compatible = "qcom,ipq40xx-mdio";*
+
+In the driver:
+#+BEGIN_SRC sh
+  drivers/net/phy/mdio-ipq40xx.c
+#+END_SRC
+
+we can find:
+#+BEGIN_SRC c
+  static const struct of_device_id ipq40xx_mdio_dt_ids[] = {
+          { .compatible = "qcom,ipq40xx-mdio" },
+          { }
+  };
+#+END_SRC
+
+the compatible message are matched.
+
+Check the mdio-ipq40xx.c history:
+#+BEGIN_SRC sh
+  arm: dts: ipq40xx: Configure the GPIO to reset QCA8075 in kernel
+
+  static int ipq40xx_mdio_probe(struct platform_device *pdev)
+   {
+          struct ipq40xx_mdio_data *am;
+          struct resource *res;
+          int ret, i;
+   
+  +       ret = ipq40xx_phy_reset(pdev);
+  +       if (ret) {
+  +               dev_err(&pdev->dev, "Could not find qca8075 reset gpio\n");
+  +               goto err_out;
+  +       }
+  +
+          am = devm_kzalloc(&pdev->dev, sizeof(*am), GFP_KERNEL);
+          if (!am)
+                  return -ENOMEM;
+#+END_SRC
+
+The Reset feature is newly added for QCA8075, but our PHY is AR8035.
+
+Remove the reset code rection. And Check again, it runs ok.
+
+I guess the reset logic between AR8035 and QCA8075 is not the same.
+
