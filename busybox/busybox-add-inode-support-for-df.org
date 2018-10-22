@@ -1,0 +1,34 @@
+#+TITLE: Busybox add inode support for df
+#+OPTIONS: ^:nil
+
+* Howto
+Select 'Enable -a, -i, -B' under df
+#+BEGIN_SRC sh
+  make menuconfig
+    Base system  --->
+      <*> busybox
+        Coreutils  --->
+          [*] df
+          [ ]   Enable -a, -i, -B
+        
+#+END_SRC
+
+* build
+#+BEGIN_SRC sh
+  make package/busybox/compile V=s
+#+END_SRC
+
+busybox built under
+#+BEGIN_SRC sh
+  build_dir/target-mips_34kc_uClibc-0.9.33.2/busybox-1.23.2
+#+END_SRC
+
+* Knowledge
+** inode
+The inode is a data structure in a Unix-style file system that
+describes a file-system object such as a file or a directory.
+Each inode stores the attributes and disk block location(s) of
+the object's data. File-Directories are lists of names assigned
+to inodes. A directory contains an entry for itself, its parent,
+and each of its children. 
+
