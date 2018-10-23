@@ -1,0 +1,56 @@
+#+TITLE: Fix Issue with no space left on device
+#+OPTIONS: ^:nil
+
+* Reference
++ https://www.maketecheasier.com/fix-linux-no-space-left-on-device-error/
+
+* Describe
+I came across following issue while sysupgrade.
+#+BEGIN_SRC sh
+  /sbin/sysupgrade: line 10: can't create /etc/upgrade111: No space left on device
+#+END_SRC
+
+* check du and df
+Before you go any further, it's a good idea to check that
+#+BEGIN_SRC sh
+  root@aaa:~# df -h
+#+END_SRC
+
+* Possible Causes
+** Big File
+Maybe some big .pcap file stored in /root!
+
+** Deleted File Reserved by Process
+Occasionally, a file will be deleted, but a process is still using
+it. Linux won't release the storage associated with the file while
+the process is still running. You just need to find the process
+and restart it.
+
+Try to locate the process.
+#+BEGIN_SRC sh
+  lsof / | grep deleted
+#+END_SRC
+
+** Not Enough Inodes
+*** reproduce script
+#+BEGIN_SRC sh
+  #!/bin/sh
+
+  k=0
+  mkdir /.tmp/a
+  while [ 1 -lt 10000 ]; do
+          k=`expr $k + 1`
+          touch /.tmp/a/$k
+  done
+#+END_SRC 
+
+After a while, error occures:
+#+BEGIN_SRC sh
+  touch: /.tmp/a/6001: No space left on device
+#+END_SRC
+
+*** Command to find inode used
+#+BEGIN_SRC sh
+  for i in /*; do echo $i; find $i |wc -l | sort ; done
+#+END_SRC
+
