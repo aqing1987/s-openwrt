@@ -1,0 +1,5 @@
+config hello
+　　tristate "first driver hello"
+　　default n
+　　help
+　　　This is my first test driver
