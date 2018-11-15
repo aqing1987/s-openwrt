@@ -1,0 +1,5 @@
+config SDS1302
+　　tristate "ported DS1302"
+　　default y
+　　help
+　　　This is ds1302 rtc driver for platform ap143.
