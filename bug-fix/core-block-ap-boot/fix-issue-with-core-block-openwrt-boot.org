@@ -1,0 +1,33 @@
+#+TITLE: Fix Issue with core block openwrt boot
+#+OPTIONS: ^:nil
+
+* Description
+AP cannot boot normally.
+
+* Fix Solution
+remove core before execute in /etc/init.d/boot
+#+BEGIN_SRC sh
+  cd /etc/uci-defaults || return 0
+  [ -f core ] && rm core
+  files="$(ls)"
+  [ -z "$files" ] && return 0
+#+END_SRC
+
+
+* Reason
+If /etc/init.d/boot invokes scripts under /etc/uci-defaults/, and 
+We enabled the core dump in /etc/rc.common script
+#+BEGIN_SRC sh
+  ulimit -c 1024
+#+END_SRC
+
+The code in the /etc/uci-defaults/ scripts may trigger a core file
+under /etc/uci-defaults.
+
+Most of the time, the core file will not block the AP booting.
+
+But *probably* an evil core file will block the AP booting. And block each reboot, power boot.
+
+Only firstboot, or remove it can recover the device.
+
+
