@@ -1,0 +1,14 @@
+#+TITLE: Code Format
+#+OPTIONS: ^:nil
+
+* emacs config
+  For loading kernel code style, put *.dir-locals.el* under the
+  kernel related project root.
+
+* code format via clang-format
+  put *.clang-format* file under the project root, then format code.
+
+  e.g. format hello module
+  #+BEGIN_SRC sh
+    find hello -name "*.[ch]" -exec clang-format -style=file -i {} \;
+  #+END_SRC
