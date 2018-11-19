@@ -1,0 +1,5 @@
+config netlink-k
+　　tristate "netlink test driver"
+　　default n
+　　help
+　　　netlink test driver
