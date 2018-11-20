@@ -1,7 +1,8 @@
 CFLAGS += -Wall -g -O0
 RM = /bin/rm -f
 
-OBJS = netlink-a.o
+#OBJS = netlink-a.o
+OBJS = netlink-a-rx.o
 SRCS = $(OBJS:.o=.c)
 DEPS := $(OBJS:.o=.d)
 APP = netlink-a

@@ -1,1 +1,1 @@
-obj-m := netlink-k.o
+obj-m := netlink-k-tx.o
